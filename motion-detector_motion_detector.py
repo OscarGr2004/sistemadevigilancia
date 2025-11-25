@@ -1,4 +1,10 @@
-import time
+# ==========================================
+# PROYECTO: PIC2 Surveillance System
+# AUTOR: Oscar GR (@OscarGr2004)
+# FECHA: Noviembre 2025
+# DESCRIPCIÓN: Sistema de vigilancia táctico con Docker y RPi Zero 2 W.
+# LICENCIA: MIT License
+# ==========================================import time
 import os
 import subprocess
 import sys
