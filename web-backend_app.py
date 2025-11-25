@@ -1,4 +1,10 @@
-from flask import Flask, send_from_directory, jsonify
+# ==========================================
+# PROYECTO: PIC2 Surveillance System
+# AUTOR: Oscar GR (@OscarGr2004)
+# FECHA: Noviembre 2025
+# DESCRIPCIÓN: Sistema de vigilancia táctico con Docker y RPi Zero 2 W.
+# LICENCIA: MIT License
+# ==========================================from flask import Flask, send_from_directory, jsonify
 from flask_cors import CORS
 import os
 import shutil
