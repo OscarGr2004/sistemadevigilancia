@@ -1,0 +1,13 @@
+FROM python:3.9-slim-bookworm
+
+# Instalar util-linux para tener 'nsenter'
+RUN apt-get update && apt-get install -y \
+    util-linux \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# No necesitamos librerías pesadas, solo lo básico
+COPY motion_detector.py .
+
+CMD ["python", "motion_detector.py"]

@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SISTEMA PIC2 - OSCAR GR</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #050505;
+            --primary: #00ff41; 
+            --secondary: #003b00;
+            --alert: #ff3333;
+            --text: #ccffcc;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            background-image: radial-gradient(#0a2e0a 1px, transparent 1px);
+            background-size: 20px 20px;
+            color: var(--text);
+            font-family: 'Orbitron', sans-serif;
+            margin: 0;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .header {
+            width: 100%;
+            max-width: 800px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .brand { font-size: 1.5em; font-weight: bold; text-shadow: 0 0 10px var(--primary); }
+        .cam-id { background: var(--primary); color: #000; padding: 2px 8px; font-weight: bold; }
+
+        .monitor-frame {
+            position: relative;
+            padding: 4px;
+            background: linear-gradient(45deg, var(--primary) 0%, transparent 5%, transparent 95%, var(--primary) 100%);
+            box-shadow: 0 0 30px rgba(0, 255, 65, 0.1);
+        }
+
+        .video-container {
+            position: relative;
+            width: 640px;
+            max-width: 100%;
+            border: 1px solid var(--secondary);
+            background: #000;
+        }
+
+        img#feed { width: 100%; display: block; opacity: 0.9; }
+
+        .hud-corner {
+            position: absolute; width: 20px; height: 20px;
+            border: 2px solid var(--primary); z-index: 10;
+        }
+        .tl { top: 10px; left: 10px; border-right: none; border-bottom: none; }
+        .tr { top: 10px; right: 10px; border-left: none; border-bottom: none; }
+        .bl { bottom: 10px; left: 10px; border-right: none; border-top: none; }
+        .br { bottom: 10px; right: 10px; border-left: none; border-top: none; }
+
+        .rec-indicator {
+            position: absolute; top: 20px; right: 20px;
+            color: var(--alert); font-size: 0.8em; animation: blink 1s infinite;
+        }
+
+        .panel {
+            margin-top: 20px; display: grid; grid-template-columns: 1fr 1fr;
+            gap: 20px; width: 100%; max-width: 640px;
+        }
+
+        button {
+            background: rgba(0, 20, 0, 0.8);
+            border: 1px solid var(--primary); color: var(--primary);
+            padding: 15px; font-family: 'Orbitron', sans-serif;
+            font-size: 1.1em; cursor: pointer; transition: 0.2s;
+            text-transform: uppercase;
+        }
+        button:hover { background: var(--primary); color: #000; box-shadow: 0 0 15px var(--primary); }
+
+        .status-log { margin-top: 15px; font-size: 0.8em; color: #555; font-weight: bold; }
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0; } 100% { opacity: 1; } }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="brand">OSCAR GR</div>
+        <div>SISTEMA DE VIGILANCIA</div>
+        <div class="cam-id">PIC2</div>
+    </div>
+
+    <div class="monitor-frame">
+        <div class="video-container">
+            <div class="hud-corner tl"></div><div class="hud-corner tr"></div>
+            <div class="hud-corner bl"></div><div class="hud-corner br"></div>
+            <div class="rec-indicator">● LIVE</div>
+            <img id="feed" src="" alt="NO SIGNAL">
+        </div>
+    </div>
+
+    <div class="panel">
+        <button onclick="saveEvidence()">📸 GUARDAR EVIDENCIA</button>
+        <button onclick="downloadLocal()">💾 DESCARGAR FOTO</button>
+    </div>
+
+    <div id="status" class="status-log">SISTEMA EN LÍNEA</div>
+
+    <script>
+        const API = "http://" + window.location.hostname + ":5001";
+        const img = document.getElementById('feed');
+        const statusDiv = document.getElementById('status');
+        let isSaving = false;
+
+        function setStatus(msg, color="#ccffcc") {
+            statusDiv.innerText = msg;
+            statusDiv.style.color = color;
+        }
+
+        function refreshImage() {
+            const newSrc = API + "/data/live_feed.jpg?t=" + new Date().getTime();
+            const temp = new Image();
+            temp.onload = function() { img.src = newSrc; setTimeout(refreshImage, 150); };
+            temp.onerror = function() { setTimeout(refreshImage, 1000); };
+            temp.src = newSrc;
+        }
+
+        function saveEvidence() {
+            if(isSaving) return;
+            isSaving = true;
+            setStatus("GUARDANDO...", "yellow");
+            
+            fetch(API + '/api/snapshot', { method: 'POST' })
+                .then(r => r.json())
+                .then(d => {
+                    if(d.status === 'ok') setStatus("✅ EVIDENCIA GUARDADA: " + d.file, "#00ff41");
+                    else setStatus("❌ ERROR: " + d.msg, "#ff3333");
+                })
+                .catch(e => setStatus("❌ ERROR DE CONEXIÓN", "#ff3333"))
+                .finally(() => isSaving = false);
+        }
+
+        function downloadLocal() {
+            const link = document.createElement('a');
+            link.href = img.src;
+            link.download = "OSCARGR_PIC2_" + new Date().getTime() + ".jpg";
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            setStatus("⬇️ DESCARGA COMPLETA", "#00ff41");
+        }
+
+        refreshImage();
+    </script>
+</body>
+</html>

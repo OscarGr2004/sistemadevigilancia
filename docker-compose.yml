@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  web-frontend:
+    build: ./web-frontend
+    container_name: frontend_perron
+    restart: always
+    ports:
+      - "80:80"
+
+  web-backend:
+    build: ./web-backend
+    container_name: backend_api
+    restart: always
+    ports:
+      - "5001:5000"
+    volumes:
+      - ./data:/app/data
+
+  motion-detector:
+    build: ./motion-detector
+    container_name: detector_cam
+    restart: always
+    privileged: true
+    network_mode: "host"
+    pid: "host"
+    volumes:
+      - ./data:/data
+    environment:
+      - HOST_DATA_PATH=/home/oscargr/proyecto-vigilancia/data
